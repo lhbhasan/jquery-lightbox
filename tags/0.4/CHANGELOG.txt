@@ -1,0 +1,26 @@
+Version 0.4
+===================
+Applying jQuery philosophy and adding customization
+ - Combined multiple animate events into one seamless event
+ - Added resizeSpeed as a customizable variable
+ - Added loading/close images as customizable variables
+ - Added destroyElement calls prior to initalization, to allow for dynamic/multiple initalizations
+ - Added this changelog file.
+
+Version 0.3
+===================
+Bug Fixes
+ - 
+ - 
+
+
+Version 0.2
+===================
+Feature Complete
+ - 
+ -
+
+Version 0.1
+===================
+Initial Revision
+ - Converted from prototype/scriptacolus to jQuery
