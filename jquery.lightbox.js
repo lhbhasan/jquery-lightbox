@@ -3,18 +3,35 @@
  * Version 0.5 - 11/29/2007
  * @author Warren Krewenki
  *
+ * Changes by:
+ * @author Krzysztof Kotowicz <koto at webworkers dot pl>:
+ *  - bugfix: multiple instances of Lightbox galleries allowed
+ *    (using opts variable instead of $.fn.lightbox.defaults)
+ *  - bugfix: use var for local variables in a few functions
+ *  - added support for navbarOnTop setting
+ *  - added support for displayTitle setting
+ *  - added support for slideNavBar setting (with slideNavBarSpeed)
+ *  - added support for displayHelp setting
+ *  - added support for fitToScreen setting (ported Lightbox VinDSL hack)
+ *    (see http://www.huddletogether.com/forum/comments.php?DiscussionID=307)
+ *  - plugin now uses jQuery.width() and jQuery.height()
+ *  - removed eval() calls
+ *  - removed destroyElement - uses jQuery.remove()
+ *  - use of prevLinkText, nextLinkText and help
+ *  - all strings are now placed in opts.strings to allow for customization/translation
+ *
  * Based on Lightbox 2 by Lokesh Dhakar (http://www.huddletogether.com/projects/lightbox2/)
  * Originally written to make use of the Prototype framework, and Script.acalo.us, now altered to use jQuery.
  *
  **/
 
 (function($){
+	var opts;
+
 	$.fn.lightbox = function(options){
-		debug(this);
-		
 		// build main options
-		var opts = $.extend({}, $.fn.lightbox.defaults, options);
-		
+		opts = $.extend({}, $.fn.lightbox.defaults, options);
+
 		// initalize the lightbox
 		$.fn.lightbox.initialize();
 		return this.each(function(){
@@ -24,29 +41,43 @@
 			});
 		});
 	};
-	
-	function debug($obj) {
-		if (window.console && window.console.log)
-			window.console.log('lightbox initalization count: ' + $obj.size());
-	};
-	
+
 	// lightbox functions
 	$.fn.lightbox.initialize = function(){
-		$.fn.lightbox.destroyElement('overlay');
-		$.fn.lightbox.destroyElement('lightbox');
-		$.fn.lightbox.defaults.inprogress = false;
-		$("body").append('<div id="overlay"></div><div id="lightbox"><div id="outerImageContainer"><div id="imageContainer"><img id="lightboxImage"><div style="" id="hoverNav"><a href="javascript://" id="prevLink"></a><a href="javascript://" id="nextLink"></a></div><div id="loading"><a href="javascript://" id="loadingLink"><img src="'+$.fn.lightbox.defaults.fileLoadingImage+'"></a></div></div></div><div id="imageDataContainer"><div id="imageData"><div id="imageDetails"><span id="caption"></span><span id="numberDisplay"></span></div><div id="bottomNav"><a href="javascript://" id="bottomNavClose"><img src="'+$.fn.lightbox.defaults.fileBottomNavCloseImage+'"></a></div></div></div></div>');
+		$('#overlay').remove();
+		$('#lightbox').remove();
+		opts.inprogress = false;
+		var outerImage = '<div id="outerImageContainer"><div id="imageContainer"><img id="lightboxImage"><div id="hoverNav"><a href="javascript://" title="' + opts.strings.prevLinkTitle + '" id="prevLink"></a><a href="javascript://" id="nextLink" title="' + opts.strings.nextLinkTitle + '"></a></div><div id="loading"><a href="javascript://" id="loadingLink"><img src="'+opts.fileLoadingImage+'"></a></div></div></div>';
+		var imageData = '<div id="imageDataContainer" class="clearfix"><div id="imageData"><div id="imageDetails"><span id="caption"></span><span id="numberDisplay"></span></div><div id="bottomNav">'
+
+		if (opts.displayHelp)
+			imageData += '<span id="helpDisplay">' + opts.strings.help + '</span>';
+
+		imageData += '<a href="javascript://" id="bottomNavClose" title="' + opts.strings.closeTitle + '"><img src="'+opts.fileBottomNavCloseImage+'"></a></div></div></div>';
+
+		var string;
+
+		if (opts.navbarOnTop) {
+		  string = '<div id="overlay"></div><div id="lightbox">' + imageData + outerImage + '</div>';
+		  $("body").append(string);
+		  $("#imageDataContainer").addClass('ontop');
+		} else {
+		  string = '<div id="overlay"></div><div id="lightbox">' + outerImage + imageData + '</div>';
+		  $("body").append(string);
+		}
+
 		$("#overlay").click(function(){ $.fn.lightbox.end(); }).hide();
 		$("#lightbox").click(function(){ $.fn.lightbox.end();}).hide();
 		$("#loadingLink").click(function(){ $.fn.lightbox.end(); return false;});
 		$("#bottomNavClose").click(function(){ $.fn.lightbox.end(); return false; });
-		$('#outerImageContainer').css({width: '250px', height: '250px;'});		
+		$('#outerImageContainer').width(opts.widthCurrent).height(opts.heightCurrent);
+		$('#imageDataContainer').width(opts.widthCurrent);
 	};
-	
+
 	$.fn.lightbox.getPageSize = function(){
 		var xScroll, yScroll;
 
-		if (window.innerHeight && window.scrollMaxY) {	
+		if (window.innerHeight && window.scrollMaxY) {
 			xScroll = window.innerWidth + window.scrollMaxX;
 			yScroll = window.innerHeight + window.scrollMaxY;
 		} else if (document.body.scrollHeight > document.body.offsetHeight){ // all but Explorer Mac
@@ -59,9 +90,9 @@
 
 		var windowWidth, windowHeight;
 
-		if (self.innerHeight) {	// all except Explorer
+		if (self.innerHeight) { // all except Explorer
 			if(document.documentElement.clientWidth){
-				windowWidth = document.documentElement.clientWidth; 
+				windowWidth = document.documentElement.clientWidth;
 			} else {
 				windowWidth = self.innerWidth;
 			}
@@ -72,101 +103,104 @@
 		} else if (document.body) { // other Explorers
 			windowWidth = document.body.clientWidth;
 			windowHeight = document.body.clientHeight;
-		}	
+		}
 
 		// for small pages with total height less then height of the viewport
 		if(yScroll < windowHeight){
 			pageHeight = windowHeight;
-		} else { 
+		} else {
 			pageHeight = yScroll;
 		}
 
 
 		// for small pages with total width less then width of the viewport
-		if(xScroll < windowWidth){	
-			pageWidth = xScroll;		
+		if(xScroll < windowWidth){
+			pageWidth = xScroll;
 		} else {
 			pageWidth = windowWidth;
 		}
 
-		arrayPageSize = new Array(pageWidth,pageHeight,windowWidth,windowHeight) 
+		var arrayPageSize = new Array(pageWidth,pageHeight,windowWidth,windowHeight);
 		return arrayPageSize;
-		
-
 	};
-	
-	
+
+
 	$.fn.lightbox.getPageScroll = function(){
 		var xScroll, yScroll;
 
 		if (self.pageYOffset) {
 			yScroll = self.pageYOffset;
 			xScroll = self.pageXOffset;
-		} else if (document.documentElement && document.documentElement.scrollTop){	 // Explorer 6 Strict
+		} else if (document.documentElement && document.documentElement.scrollTop){  // Explorer 6 Strict
 			yScroll = document.documentElement.scrollTop;
 			xScroll = document.documentElement.scrollLeft;
 		} else if (document.body) {// all other Explorers
 			yScroll = document.body.scrollTop;
-			xScroll = document.body.scrollLeft;	
+			xScroll = document.body.scrollLeft;
 		}
 
-		arrayPageScroll = new Array(xScroll,yScroll) 
-		return arrayPageScroll;		
+		var arrayPageScroll = new Array(xScroll,yScroll);
+		return arrayPageScroll;
 	};
-	
+
 	$.fn.lightbox.pause = function(ms){
 		var date = new Date();
-		curDate = null;
-		do{var curDate = new Date();}
-		while( curDate - date < ms);		
+		var curDate = null;
+		do{curDate = new Date();}
+		while( curDate - date < ms);
 	};
-	
+
 	$.fn.lightbox.start = function(imageLink){
+
 		$("select, embed, object").hide();
 		var arrayPageSize = $.fn.lightbox.getPageSize();
-		$("#overlay").hide().css({width: '100%', height: arrayPageSize[1]+'px', opacity : $.fn.lightbox.defaults.overlayOpacity}).fadeIn();
-		$.fn.lightbox.defaults.imageArray = [];
-		imageNum = 0;		
-		
+		$("#overlay").hide().css({width: '100%', height: arrayPageSize[1]+'px', opacity : opts.overlayOpacity}).fadeIn();
+		opts.imageArray = [];
+		imageNum = 0;
+
 		var anchors = document.getElementsByTagName( imageLink.tagName);
-	
+
 		// if image is NOT part of a set..
 		if(!imageLink.rel || (imageLink.rel == '')){
 			// add single image to Lightbox.imageArray
-			$.fn.lightbox.defaults.imageArray.push(new Array(imageLink.href, imageLink.title));			
+			opts.imageArray.push(new Array(imageLink.href, opts.displayTitle ? imageLink.title : ''));
 		} else {
 		// if image is part of a set..
 			$("a").each(function(){
 				if(this.href && (this.rel == imageLink.rel)){
-					$.fn.lightbox.defaults.imageArray.push(new Array(this.href, this.title));
+					opts.imageArray.push(new Array(this.href, opts.displayTitle ? this.title : ''));
 				}
 			})
 
 
-			for(i = 0; i < $.fn.lightbox.defaults.imageArray.length; i++){
-		        for(j = $.fn.lightbox.defaults.imageArray.length-1; j>i; j--){        
-		            if($.fn.lightbox.defaults.imageArray[i][0] == $.fn.lightbox.defaults.imageArray[j][0]){
-		                $.fn.lightbox.defaults.imageArray.splice(j,1);
-		            }
-		        }
-		    }
-			while($.fn.lightbox.defaults.imageArray[imageNum][0] != imageLink.href) { imageNum++;}
+			for(i = 0; i < opts.imageArray.length; i++){
+				for(j = opts.imageArray.length-1; j>i; j--){
+					if(opts.imageArray[i][0] == opts.imageArray[j][0]){
+						opts.imageArray.splice(j,1);
+					}
+				}
+			}
+			while(opts.imageArray[imageNum][0] != imageLink.href) { imageNum++;}
 		}
 
-		// calculate top and left offset for the lightbox 
+		// calculate top and left offset for the lightbox
 		var arrayPageScroll = $.fn.lightbox.getPageScroll();
 		var lightboxTop = arrayPageScroll[1] + (arrayPageSize[3] / 10);
 		var lightboxLeft = arrayPageScroll[0];
 		$('#lightbox').css({top: lightboxTop+'px', left: lightboxLeft+'px'}).show();
-		
+
+
+		if (!opts.slideNavBar)
+			$('#imageData').hide();
+
 		$.fn.lightbox.changeImage(imageNum);
-		
+
 	};
-	
+
 	$.fn.lightbox.changeImage = function(imageNum){
-		if($.fn.lightbox.defaults.inprogress == false){
-			$.fn.lightbox.defaults.inprogress = true;
-			$.fn.lightbox.defaults.activeImage = imageNum;	// update global var
+		if(opts.inprogress == false){
+			opts.inprogress = true;
+			opts.activeImage = imageNum;	// update global var
 
 			// hide elements during transition
 			$('#loading').show();
@@ -174,28 +208,54 @@
 			$('#hoverNav').hide();
 			$('#prevLink').hide();
 			$('#nextLink').hide();
-			$('#imageDataContainer').hide();
-			$('#numberDisplay').hide();		
-		
-			imgPreloader = new Image();
-		
-			// once image is preloaded, resize image container
-			imgPreloader.onload=function(){
-				document.getElementById('lightboxImage').src = $.fn.lightbox.defaults.imageArray[$.fn.lightbox.defaults.activeImage][0];
-				$.fn.lightbox.resizeImageContainer(imgPreloader.width, imgPreloader.height);
+
+			if (opts.slideNavBar) { // delay preloading image until navbar will slide up
+				// $('#imageDataContainer').slideUp(opts.navBarSlideSpeed, $.fn.doChangeImage);
+				$('#imageDataContainer').hide();
+				$('#imageData').hide();
+				$.fn.doChangeImage();
+			} else {
+			    $.fn.doChangeImage();
 			}
-			imgPreloader.src = $.fn.lightbox.defaults.imageArray[$.fn.lightbox.defaults.activeImage][0];
-		}		
-	};
-	
-	
-	
-	$.fn.lightbox.destroyElement = function(id){
-		if(el = document.getElementById(id)){
-			el.parentNode.removeChild(el);
 		}
 	};
 
+	$.fn.doChangeImage = function(){
+
+		imgPreloader = new Image();
+
+		// once image is preloaded, resize image container
+		imgPreloader.onload=function(){
+		    var newWidth = imgPreloader.width;
+		    var newHeight = imgPreloader.height;
+
+
+			if (opts.fitToScreen) {
+		        var arrayPageSize = $.fn.lightbox.getPageSize();
+				var ratio;
+				var initialPageWidth = arrayPageSize[2] - 2 * opts.borderSize;
+				var initialPageHeight = arrayPageSize[3] - 200;
+
+				if (imgPreloader.height > initialPageHeight)
+				{
+					newWidth = parseInt((initialPageHeight/imgPreloader.height) * imgPreloader.width);
+					newHeight = initialPageHeight;
+				}
+				else if (imgPreloader.width > initialPageWidth)
+				{
+					newHeight = parseInt((initialPageWidth/imgPreloader.width) * imgPreloader.height);
+					newWidth = initialPageWidth;
+				}
+			}
+
+			$('#lightboxImage').attr('src', opts.imageArray[opts.activeImage][0])
+							   .width(newWidth).height(newHeight);
+			$.fn.lightbox.resizeImageContainer(newWidth, newHeight);
+		}
+
+		imgPreloader.src = opts.imageArray[opts.activeImage][0];
+	}
+	
 	$.fn.lightbox.end = function(){
 		$.fn.lightbox.disableKeyboardNav();
 		$('#lightbox').hide();
@@ -204,124 +264,141 @@
 	};
 
 	$.fn.lightbox.preloadNeighborImages = function(){
-		if(($.fn.lightbox.defaults.imageArray.length - 1) > $.fn.lightbox.defaults.activeImage){
+		if((opts.imageArray.length - 1) > opts.activeImage){
 			preloadNextImage = new Image();
-			preloadNextImage.src = $.fn.lightbox.defaults.imageArray[$.fn.lightbox.defaults.activeImage + 1][0];
+			preloadNextImage.src = opts.imageArray[opts.activeImage + 1][0];
 		}
-		if($.fn.lightbox.defaults.activeImage > 0){
+		if(opts.activeImage > 0){
 			preloadPrevImage = new Image();
-			preloadPrevImage.src = $.fn.lightbox.defaults.imageArray[$.fn.lightbox.defaults.activeImage - 1][0];
+			preloadPrevImage.src = opts.imageArray[opts.activeImage - 1][0];
 		}
 	};
-	
+
 	$.fn.lightbox.keyboardAction = function(e){
 		if (e == null) { // ie
-			keycode = event.keyCode;
-			escapeKey = 27;
+			var keycode = event.keyCode;
+			var escapeKey = 27;
 		} else { // mozilla
-			keycode = e.keyCode;
-			escapeKey = e.DOM_VK_ESCAPE;
+			var keycode = e.keyCode;
+			var escapeKey = e.DOM_VK_ESCAPE;
 		}
 
-		key = String.fromCharCode(keycode).toLowerCase();
+		var key = String.fromCharCode(keycode).toLowerCase();
 
-		if((key == 'x') || (key == 'o') || (key == 'c') || (keycode == escapeKey)){	// close lightbox
+		if((key == 'x') || (key == 'o') || (key == 'c') || (keycode == escapeKey)){ // close lightbox
 			$.fn.lightbox.end();
-		} else if((key == 'p') || (keycode == 37)){	// display previous image
-			if($.fn.lightbox.defaults.activeImage != 0){
+		} else if((key == 'p') || (keycode == 37)){ // display previous image
+			if(opts.activeImage != 0){
 				$.fn.lightbox.disableKeyboardNav();
-				$.fn.lightbox.changeImage($.fn.lightbox.defaults.activeImage - 1);
+				$.fn.lightbox.changeImage(opts.activeImage - 1);
 			}
-		} else if((key == 'n') || (keycode == 39)){	// display next image
-			if($.fn.lightbox.defaults.activeImage != ($.fn.lightbox.defaults.imageArray.length - 1)){
+		} else if((key == 'n') || (keycode == 39)){ // display next image
+			if(opts.activeImage != (opts.imageArray.length - 1)){
 				$.fn.lightbox.disableKeyboardNav();
-				$.fn.lightbox.changeImage($.fn.lightbox.defaults.activeImage + 1);
+				$.fn.lightbox.changeImage(opts.activeImage + 1);
 			}
-		}		
+		}
 	};
-	
+
 	$.fn.lightbox.resizeImageContainer = function(imgWidth, imgHeight){
-		// get curren width and height
-		$.fn.lightbox.defaults.widthCurrent = document.getElementById('outerImageContainer').offsetWidth;
-		$.fn.lightbox.defaults.heightCurrent = document.getElementById('outerImageContainer').offsetHeight;
+		// get current width and height
+		opts.widthCurrent = document.getElementById('outerImageContainer').offsetWidth;
+		opts.heightCurrent = document.getElementById('outerImageContainer').offsetHeight;
 
 		// get new width and height
-		var widthNew = (imgWidth  + ($.fn.lightbox.defaults.borderSize * 2));
-		var heightNew = (imgHeight  + ($.fn.lightbox.defaults.borderSize * 2));
+		var widthNew = (imgWidth  + (opts.borderSize * 2));
+		var heightNew = (imgHeight  + (opts.borderSize * 2));
 
 		// scalars based on change from old to new
-		$.fn.lightbox.defaults.xScale = ( widthNew / $.fn.lightbox.defaults.widthCurrent) * 100;
-		$.fn.lightbox.defaults.yScale = ( heightNew / $.fn.lightbox.defaults.heightCurrent) * 100;
+		opts.xScale = ( widthNew / opts.widthCurrent) * 100;
+		opts.yScale = ( heightNew / opts.heightCurrent) * 100;
 
 		// calculate size difference between new and old image, and resize if necessary
-		wDiff = $.fn.lightbox.defaults.widthCurrent - widthNew;
-		hDiff = $.fn.lightbox.defaults.heightCurrent - heightNew;
+		wDiff = opts.widthCurrent - widthNew;
+		hDiff = opts.heightCurrent - heightNew;
 
-		$('#outerImageContainer').animate({width: widthNew},$.fn.lightbox.defaults.resizeSpeed,'linear',function(){
-			$('#outerImageContainer').animate({height: heightNew},$.fn.lightbox.defaults.resizeSpeed,'linear',function(){
-				$.fn.lightbox.showImage();	
-			});
+		$('#imageDataContainer').animate({width: widthNew},opts.resizeSpeed,'linear');
+		$('#outerImageContainer').animate({width: widthNew, height: heightNew},opts.resizeSpeed,'linear',function(){
+			$.fn.lightbox.showImage();
 		});
 
 
-		// if new and old image are same size and no scaling transition is necessary, 
+		// if new and old image are same size and no scaling transition is necessary,
 		// do a quick pause to prevent image flicker.
 		if((hDiff == 0) && (wDiff == 0)){
-			if (navigator.appVersion.indexOf("MSIE")!=-1){ $.fn.lightbox.pause(250); } else { $.fn.lightbox.pause(100);} 
+			if (jQuery.browser.msie){ $.fn.lightbox.pause(250); } else { $.fn.lightbox.pause(100);}
 		}
 
-		$('#prevLink').css({height: imgHeight+'px'});
-		$('#nextLink').css({height: imgHeight+'px'});
-		$('#imageDataContainer').css({width: widthNew+'px'});	
+		$('#prevLink').height(imgHeight);
+		$('#nextLink').height(imgHeight);
 	};
-	
+
 	$.fn.lightbox.showImage = function(){
 		$('#loading').hide();
 		$('#lightboxImage').fadeIn("fast");
 		$.fn.lightbox.updateDetails();
 		$.fn.lightbox.preloadNeighborImages();
-		$.fn.lightbox.defaults.inprogress = false;
+
+		opts.inprogress = false;
 	};
-	
+
 	$.fn.lightbox.updateDetails = function(){
-		$("#imageDataContainer").hide();
-		if($.fn.lightbox.defaults.imageArray[$.fn.lightbox.defaults.activeImage][1]){
-			$('#caption').html($.fn.lightbox.defaults.imageArray[$.fn.lightbox.defaults.activeImage][1]).show();
-		}
-		
-		// if image is part of set display 'Image x of x' 
-		if($.fn.lightbox.defaults.imageArray.length > 1){
-			$('#numberDisplay').html("Image " + eval($.fn.lightbox.defaults.activeImage + 1) + " of " + $.fn.lightbox.defaults.imageArray.length).show();
+
+		if(opts.imageArray[opts.activeImage][1]){
+			$('#caption').html(opts.imageArray[opts.activeImage][1]).show();
 		}
 
-		$("#imageDataContainer").hide().slideDown("slow");
+		// if image is part of set display 'Image x of x'
+		if(opts.imageArray.length > 1){
+			var nav_html;
+
+			nav_html = opts.strings.image + (opts.activeImage + 1) + opts.strings.of + opts.imageArray.length;
+
+			// display previous / next text links
+			if ((opts.activeImage) > 0) {
+				nav_html = '<a title="' + opts.strings.prevLinkTitle + '" href="#" id="prevLinkText">' + opts.strings.prevLinkText + "</a>" + nav_html;
+			}
+
+			if ((opts.activeImage + 1) < opts.imageArray.length) {
+				nav_html += '<a title="' + opts.strings.nextLinkTitle + '" href="#" id="nextLinkText">' + opts.strings.nextLinkText + "</a>";
+			}
+
+			$('#numberDisplay').html(nav_html).show();
+		}
+
+		if (opts.slideNavBar) {
+		    $("#imageData").slideDown(opts.navBarSlideSpeed);
+		} else {
+			$("#imageData").show();
+		}
+
 		var arrayPageSize = $.fn.lightbox.getPageSize();
-		$('#overLay').css({height: arrayPageSize[1]+'px'});
-		$.fn.lightbox.updateNav();		
+		$('#overlay').height(arrayPageSize[1]);
+		$.fn.lightbox.updateNav();
 	};
-	
+
 	$.fn.lightbox.updateNav = function(){
-		$('#hoverNav').show();				
+		$('#hoverNav').show();
 
 		// if not first image in set, display prev image button
-		if($.fn.lightbox.defaults.activeImage != 0){
-			$('#prevLink').show().click(function(){
-				$.fn.lightbox.changeImage($.fn.lightbox.defaults.activeImage - 1); return false;
+		if(opts.activeImage != 0){
+			$('#prevLink,#prevLinkText').show().click(function(){
+				$.fn.lightbox.changeImage(opts.activeImage - 1); return false;
 			});
 		}
 
 		// if not last image in set, display next image button
-		if($.fn.lightbox.defaults.activeImage != ($.fn.lightbox.defaults.imageArray.length - 1)){
-			$('#nextLink').show().click(function(){
-				
-				$.fn.lightbox.changeImage($.fn.lightbox.defaults.activeImage +1); return false;
+		if(opts.activeImage != (opts.imageArray.length - 1)){
+			$('#nextLink,#nextLinkText').show().click(function(){
+
+				$.fn.lightbox.changeImage(opts.activeImage +1); return false;
 			});
 		}
-		
-		$.fn.lightbox.enableKeyboardNav();		
+
+		$.fn.lightbox.enableKeyboardNav();
 	};
-	
-	
+
+
 	$.fn.lightbox.enableKeyboardNav = function(){
 		document.onkeydown = $.fn.lightbox.keyboardAction;
 	};
@@ -337,11 +414,27 @@
 		borderSize : 10,
 		imageArray : new Array,
 		activeImage : null,
-		inprogess : false,
+		inprogress : false,
 		resizeSpeed : 350,
-		widthCurrent : 250,
-		heightCurrent : 250,
+		widthCurrent: 250,
+		heightCurrent: 250,
 		xScale : 1,
-		yScale : 1
+		yScale : 1,
+		displayTitle: false,
+		navbarOnTop: false,
+		slideNavBar: true, // slide nav bar up/down between image resizing transitions
+		navBarSlideSpeed: 350,
+		displayHelp: true,
+		strings : {
+			help: ' \u2190 / P - previous image\u00a0\u00a0\u00a0\u00a0\u2192 / N - next image\u00a0\u00a0\u00a0\u00a0ESC / X - close image gallery',
+			prevLinkTitle: 'previous image',
+			nextLinkTitle: 'next image',
+			prevLinkText:  '&laquo; Previous',
+			nextLinkText:  'Next &raquo;',
+			closeTitle: 'close image gallery',
+			image: 'Image ',
+			of: ' of '
+		},
+		fitToScreen: false		// resize images if they are bigger than window
 	};
 })(jQuery);
