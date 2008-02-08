@@ -100,6 +100,7 @@ padding-right: 20px;
 	filter:alpha(opacity=60);
 	-moz-opacity: 0.6;
 	opacity: 0.6;
+	display: none;
 	}
 	
 
