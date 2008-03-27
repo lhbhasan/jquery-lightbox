@@ -318,8 +318,10 @@
 		hDiff = opts.heightCurrent - heightNew;
 
 		$('#imageDataContainer').animate({width: widthNew},opts.resizeSpeed,'linear');
-		$('#outerImageContainer').animate({width: widthNew, height: heightNew},opts.resizeSpeed,'linear',function(){
-			$.fn.lightbox.showImage();
+		$('#outerImageContainer').animate({width: widthNew},opts.resizeSpeed,'linear',function(){
+			$('#outerImageContainer').animate({height: heightNew},opts.resizeSpeed,'linear',function(){
+				$.fn.lightbox.showImage();
+			});
 		});
 
 
@@ -420,11 +422,11 @@
 		heightCurrent: 250,
 		xScale : 1,
 		yScale : 1,
-		displayTitle: false,
+		displayTitle: true,
 		navbarOnTop: false,
-		slideNavBar: true, // slide nav bar up/down between image resizing transitions
+		slideNavBar: false, // slide nav bar up/down between image resizing transitions
 		navBarSlideSpeed: 350,
-		displayHelp: true,
+		displayHelp: false,
 		strings : {
 			help: ' \u2190 / P - previous image\u00a0\u00a0\u00a0\u00a0\u2192 / N - next image\u00a0\u00a0\u00a0\u00a0ESC / X - close image gallery',
 			prevLinkTitle: 'previous image',
