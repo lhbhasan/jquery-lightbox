@@ -3,6 +3,9 @@
  * Version 0.5 - 11/29/2007
  * @author Warren Krewenki
  *
+ * This package is distributed under the BSD license.
+ * For full license information, see LICENSE.TXT
+ *
  * Changes by:
  * @author Krzysztof Kotowicz <koto at webworkers dot pl>:
  *  - bugfix: multiple instances of Lightbox galleries allowed
@@ -22,6 +25,7 @@
  *
  * Based on Lightbox 2 by Lokesh Dhakar (http://www.huddletogether.com/projects/lightbox2/)
  * Originally written to make use of the Prototype framework, and Script.acalo.us, now altered to use jQuery.
+ *
  *
  **/
 
