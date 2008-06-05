@@ -350,6 +350,8 @@
 
 	$.fn.lightbox.updateDetails = function(){
 
+		$('#numberDisplay').html('');
+
 		if(opts.imageArray[opts.activeImage][1]){
 			$('#caption').html(opts.imageArray[opts.activeImage][1]).show();
 		}
@@ -384,24 +386,26 @@
 	};
 
 	$.fn.lightbox.updateNav = function(){
-		$('#hoverNav').show();
+		if(opts.imageArray.length > 1){
+			$('#hoverNav').show();
 
-		// if not first image in set, display prev image button
-		if(opts.activeImage != 0){
-			$('#prevLink,#prevLinkText').show().click(function(){
-				$.fn.lightbox.changeImage(opts.activeImage - 1); return false;
-			});
+			// if not first image in set, display prev image button
+			if(opts.activeImage != 0){
+				$('#prevLink,#prevLinkText').show().click(function(){
+					$.fn.lightbox.changeImage(opts.activeImage - 1); return false;
+				});
+			}
+
+			// if not last image in set, display next image button
+			if(opts.activeImage != (opts.imageArray.length - 1)){
+				$('#nextLink,#nextLinkText').show().click(function(){
+
+					$.fn.lightbox.changeImage(opts.activeImage +1); return false;
+				});
+			}
+
+			$.fn.lightbox.enableKeyboardNav();
 		}
-
-		// if not last image in set, display next image button
-		if(opts.activeImage != (opts.imageArray.length - 1)){
-			$('#nextLink,#nextLinkText').show().click(function(){
-
-				$.fn.lightbox.changeImage(opts.activeImage +1); return false;
-			});
-		}
-
-		$.fn.lightbox.enableKeyboardNav();
 	};
 
 
