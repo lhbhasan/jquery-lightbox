@@ -52,7 +52,7 @@
 		$('#lightbox').remove();
 		opts.inprogress = false;
 		var outerImage = '<div id="outerImageContainer"><div id="imageContainer"><img id="lightboxImage"><div id="hoverNav"><a href="javascript://" title="' + opts.strings.prevLinkTitle + '" id="prevLink"></a><a href="javascript://" id="nextLink" title="' + opts.strings.nextLinkTitle + '"></a></div><div id="loading"><a href="javascript://" id="loadingLink"><img src="'+opts.fileLoadingImage+'"></a></div></div></div>';
-		var imageData = '<div id="imageDataContainer" class="clearfix"><div id="imageData"><div id="imageDetails"><span id="caption"></span><span id="numberDisplay"></span></div><div id="bottomNav">'
+		var imageData = '<div id="imageDataContainer" class="clearfix"><div id="imageData"><div id="imageDetails"><span id="caption"></span><span id="numberDisplay"></span></div><div id="bottomNav">';
 
 		if (opts.displayHelp)
 			imageData += '<span id="helpDisplay">' + opts.strings.help + '</span>';
@@ -174,7 +174,7 @@
 				if(this.href && (this.rel == imageLink.rel)){
 					opts.imageArray.push(new Array(this.href, opts.displayTitle ? this.title : ''));
 				}
-			})
+			});
 
 
 			for(i = 0; i < opts.imageArray.length; i++){
@@ -255,10 +255,10 @@
 			$('#lightboxImage').attr('src', opts.imageArray[opts.activeImage][0])
 							   .width(newWidth).height(newHeight);
 			$.fn.lightbox.resizeImageContainer(newWidth, newHeight);
-		}
+		};
 
 		imgPreloader.src = opts.imageArray[opts.activeImage][0];
-	}
+	};
 	
 	$.fn.lightbox.end = function(){
 		$.fn.lightbox.disableKeyboardNav();
